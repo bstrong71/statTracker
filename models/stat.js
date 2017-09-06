@@ -6,10 +6,12 @@ module.exports = function(sequelize, DataTypes) {
     units: DataTypes.INTEGER
   }, {});
 
-  Stat.belongsTo(models.Activity, {
-    as: 'Activities',
-    foreignKey: 'activId'
-  })
+  Stat.associate = function(models) {
+    Stat.belongsTo(models.Activity, {
+      as: 'Activities',
+      foreignKey: 'activId'
+    })
+  }
 
   return Stat;
 };

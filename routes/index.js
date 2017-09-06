@@ -1,4 +1,6 @@
 const express = require("express");
+const passport    = require('passport');
+const BasicStrategy = require('passport-http').BasicStrategy;
 const models = require("../models/index");
 const router = express.Router();
 
@@ -6,7 +8,12 @@ const users = {
   'bernie': 'password'
 };
 
-//** Authentication Middleware **//
+// router.get('/api/auth', passport.authenticate('basic', {session: false}),
+//     function (req, res) {
+//         res.json({"auth": req.user})
+//     }
+// );
+
 passport.use(new BasicStrategy(
   function(username, password, done) {
       const userPassword = users[username];
@@ -16,39 +23,31 @@ passport.use(new BasicStrategy(
   }
 ));
 
-app.get('/api/auth',
-    passport.authenticate('basic', {session: false}),
-    function (req, res) {
-        res.json({"auth": req.user})
-    }
-);
-
-
-router.get("/", function(req, res) {
+router.get("/", passport.authenticate('basic', {session: false}), function(req, res) {
   res.redirect("/api");
 });
 
-router.get("/api", function(req, res) {
+router.get("/api", passport.authenticate('basic', {session: false}), function(req, res) {
   res.send("This is where I would have my API documentation.");
 });
 
-// //get list of items
-// router.get("/api/customer/items", function(req, res) {
-//   models.Item.findAll({})
-//   .then(function(items) {
-//     if(items) {
-//       items = {"status": "success", items: items};
-//       res.setHeader("Content-Type", "application/json");
-//       res.status(200).json(items);
-//     } else{
-//       res.send("No items found.");
-//     }
-//   })
-//   .catch(function(err) {
-//     err = {"status": "fail", error: err};
-//     res.status(500).send(err);
-//   })
-// });
+//** get list of activities to track **//
+router.get("/api/activities", passport.authenticate('basic', {session: false}), function(req, res) {
+  models.Activity.findAll({})
+  .then(function(data) {
+    if(data) {
+      activities = {"status": "success", activities: data};
+      res.setHeader("Content-Type", "application/json");
+      res.status(200).json(activities);
+    } else{
+      res.send("No activities found.");
+    }
+  })
+  .catch(function(err) {
+    err = {"status": "fail", error: err};
+    res.status(500).send(err);
+  })
+});
 //
 // //purchase an item
 // router.post("/api/customer/items/:itemId/purchases", function(req, res) {
@@ -135,23 +134,22 @@ router.get("/api", function(req, res) {
 //   })
 // });
 //
-// //add a new item to the machine
-// router.post("/api/vendor/items", function(req, res) {
-//   models.Item.create({
-//     description: req.body.description,
-//     cost: req.body.cost,
-//     qty: req.body.qty
-//   })
-//   .then(function(data) {
-//     data = {"status": "success", data: data};
-//     res.setHeader("Content-Type", "application/json");
-//     res.status(201).json(data);
-//   })
-//   .catch(function(err) {
-//     err = {"status": "fail", error: err};
-//     res.status(500).send(err);
-//   })
-// });
+//add a new activity to be tracked
+router.post("/api/activities", passport.authenticate('basic', {session: false}), function(req, res) {
+  models.Activity.create({
+    description: req.body.description,
+    measure: req.body.measure,
+  })
+  .then(function(data) {
+    data = {"status": "success", data: data};
+    res.setHeader("Content-Type", "application/json");
+    res.status(201).json(data);
+  })
+  .catch(function(err) {
+    err = {"status": "fail", error: err};
+    res.status(500).send(err);
+  })
+});
 //
 // //update item quantity, description, and cost
 // router.put("/api/vendor/items/:itemId", function(req, res) {
